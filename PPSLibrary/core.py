@@ -2,7 +2,7 @@ from pathlib import Path
 
 from .constant import *
 from .filesystem import FileSystem
-from .misc import make_manual_generator
+from .misc import make_manual_generator, polygon_tex_to_pps_markdown
 from .polygon_config import PolygonConfig
 
 class PPSCore:
@@ -71,6 +71,11 @@ class PPSCore:
             if self.fs.is_exists(dest):
                 self.fs.delete_file(dest)
             self.fs.copy_file(src, dest)
+
+            # convert latex to markdown
+            statement_tex = self.fs.get_file_data(dest)
+            statement_md = polygon_tex_to_pps_markdown(statement_tex)
+            self.fs.set_file_data(dest, statement_md)
 
         # copy checker files
         src = self.source_path / self.polygon_config.checker['path']

@@ -157,6 +157,11 @@ class PolygonConfig:
         # parse statements
         node = recursive_find(POLYGON_CONFIG_STATEMENTS)
         if node is not None:
+            lang_map = {
+                "korean": "한국어",
+                "english": "English"
+            }
+
             # parse statement
             for statement in node.findall(POLYGON_CONFIG_STATEMENT):
                 attrib = statement.attrib
@@ -168,6 +173,10 @@ class PolygonConfig:
                     'type': attrib.get('type', ''),
                     'language': attrib.get('language', ''),
                 })
+                if self.statements[-1]['name'].endswith('.tex'): # change extension to md
+                    self.statements[-1]['name'] = FileSystem.remove_extension(self.statements[-1]['name']) + '.md'
+                if self.statements[-1]['language'] in lang_map: # change language to pps language
+                    self.statements[-1]['language'] = lang_map[self.statements[-1]['language']]
 
         # parse tests
         used_generator = {}
