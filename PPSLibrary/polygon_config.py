@@ -32,6 +32,7 @@ class PolygonConfig:
         self.generator_custom_manuals = []
         self.statements = []
         self.tests = []
+        self.groups = []
         self.executables = []
         self.checker = {}
         self.validators = []
@@ -49,6 +50,7 @@ class PolygonConfig:
             'checker_language': self.checker['type'],
             'validator': self.validators[0]['name'] if len(self.validators) > 0 else '',
             'validator_language': self.validators[0]['type'] if len(self.validators) > 0 else '',
+            'subtask': True if len(self.groups) > 0 else False,
             'limits': {
                 'time': self.time_limit,
                 'memory': self.memory_limit,
@@ -81,9 +83,17 @@ class PolygonConfig:
                     'alias': '__pps_generator',
                 },
             ],
+            'subtask_group': [
+                {
+                    'name': group['name'],
+                    'description': group['description'],
+                    'score': group['score'],
+                } for group in self.groups
+            ],
             'genscript': [
                 {
                     'script': test['genscript'],
+                    'subtask_group': test['subtask_group'],
                     'description': test['description'],
                     'is_example': test['is_example'],
                     'only_deploy': False,
@@ -189,6 +199,7 @@ class PolygonConfig:
                 method = test.attrib.get(POLYGON_CONFIG_GENERATOR_METHOD)
                 testObj['is_example'] = bool(test.attrib.get(POLYGON_CONFIG_GENERATOR_IS_EXAMPLE, False))
                 testObj['description'] = str(test.attrib.get(POLYGON_CONFIG_GENERATOR_DESCRIPTION, ''))
+                testObj['subtask_group'] = str(test.attrib.get(POLYGON_CONFIG_TEST_GROUP, ''))
                 if method == POLYGON_CONFIG_GENERATOR_METHOD_MANUAL: # data generated from manually
                     testObj['genscript'] = POLYGON_CONFIG_PPS_CUSTROM_MANUAL_GENERATOR + ' ' + str(self.generator_custom_manual_count)
                     testObj['test_index'] = test_index
@@ -203,6 +214,17 @@ class PolygonConfig:
                 test_index += 1
         else: # no tests
             raise PPSPolygonConfigParseError('No Tests')
+        
+        # parse groups
+        node = recursive_find(POLYGON_CONFIG_GROUPS)
+        if node is not None:
+            # parse group
+            for group in node.findall(POLYGON_CONFIG_GROUP):
+                groupObj = {}
+                groupObj['name'] = str(group.attrib.get('name', ''))
+                groupObj['description'] = ''
+                groupObj['score'] = 0
+                self.groups.append(groupObj)
 
         # parse executables
         node = recursive_find(POLYGON_CONFIG_EXECUTABLES)
@@ -261,6 +283,7 @@ class PolygonConfig:
         print('[PARSED] statements:', compress_str(str(self.statements)))
         print('[PARSED] generator custom manuals:', compress_str(str(self.generator_custom_manuals)))
         print('[PARSED] tests:', compress_str(str(self.tests)))
+        print('[PARSED] groups:', compress_str(str(self.groups)))
         print('[PARSED] executables:', compress_str(str(self.executables)))
         print('[PARSED] checker:', compress_str(str(self.checker)))
         print('[PARSED] validators:', compress_str(str(self.validators)))
