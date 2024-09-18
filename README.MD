@@ -39,4 +39,4 @@ Polygon Package를 PPS Package로 만들어주는 파이썬 프로그램입니�
 
 * ~~Statement Auto Compiling Tex to Markdwon~~
 * Statement Auto Compiling Tex to Markdown For General Case (Not Tested Properly)
-* Parsing Multiple Testsets
+* Multiple Testset with Subtask Group Parsing

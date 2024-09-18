@@ -22,8 +22,6 @@ from .filesystem import (
 class PolygonConfig:
     def __init__(self):
         self.problem_title = ''
-        self.input_path_pattern = ''
-        self.output_path_pattern = ''
         self.time_limit = POLYGON_CONFIG_DEFAULT_TIME_LIMIT
         self.memory_limit = POLYGON_CONFIG_DEFAULT_MEMORY_LIMIT
         self.test_count = POLYGON_CONFIG_DEFAULT_TEST_COUNT
@@ -88,6 +86,7 @@ class PolygonConfig:
                     'name': group['name'],
                     'description': group['description'],
                     'score': group['score'],
+                    'dependencies': group['dependencies'],
                 } for group in self.groups
             ],
             'genscript': [
@@ -128,6 +127,18 @@ class PolygonConfig:
                 if node is None:
                     return None
             return node
+        def recursive_find_all(path : str):
+            '''
+            find all xml element recursively
+            '''
+            spt = path.split('.')
+            node = root
+            for i in range(len(spt)):
+                word = spt[i]
+                if i == len(spt) - 1: return node.findall(word)
+                else: node = node.find(word)
+                if node is None:
+                    return None
         def parse(node, default_value):
             '''
             parse xml element to string
@@ -156,14 +167,6 @@ class PolygonConfig:
         node = recursive_find(POLYGON_CONFIG_TEST_COUNT)
         self.test_count = int(parse(node, POLYGON_CONFIG_DEFAULT_TEST_COUNT))
 
-        # parse input path pattern
-        node = recursive_find(POLYGON_CONFIG_INPUT_PATH_PATTERN)
-        self.input_path_pattern = parse(node, '')
-
-        # parse output path pattern
-        node = recursive_find(POLYGON_CONFIG_OUTPUT_PATH_PATTERN)
-        self.output_path_pattern = parse(node, '')
-
         # parse statements
         node = recursive_find(POLYGON_CONFIG_STATEMENTS)
         if node is not None:
@@ -190,28 +193,33 @@ class PolygonConfig:
 
         # parse tests
         used_generator = {}
-        node = recursive_find(POLYGON_CONFIG_TESTS)
-        if node is not None:
-            # parse test
-            test_index = 0
-            for test in node.findall(POLYGON_CONFIG_TEST):
-                testObj = {}
-                method = test.attrib.get(POLYGON_CONFIG_GENERATOR_METHOD)
-                testObj['is_example'] = bool(test.attrib.get(POLYGON_CONFIG_GENERATOR_IS_EXAMPLE, False))
-                testObj['description'] = str(test.attrib.get(POLYGON_CONFIG_GENERATOR_DESCRIPTION, ''))
-                testObj['subtask_group'] = str(test.attrib.get(POLYGON_CONFIG_TEST_GROUP, ''))
-                if method == POLYGON_CONFIG_GENERATOR_METHOD_MANUAL: # data generated from manually
-                    testObj['genscript'] = POLYGON_CONFIG_PPS_CUSTROM_MANUAL_GENERATOR + ' ' + str(self.generator_custom_manual_count)
-                    testObj['test_index'] = test_index
-                    self.generator_custom_manuals.append(testObj)
-                    self.generator_custom_manual_count += 1
-                elif method == POLYGON_CONFIG_GENERATOR_METHOD_GENERATED: # data generated from generator
-                    testObj['genscript'] = test.attrib.get(POLYGON_CONFIG_GENERATOR_GENSCRIPT, '')
-                    used_generator[testObj['genscript'].split(' ')[0]] = True
-                else: # unknown method
-                    raise PPSPolygonConfigParseError('Unknown Generator Method')
-                self.tests.append(testObj)
-                test_index += 1
+        nodes = recursive_find_all(POLYGON_CONFIG_TESTSET)
+        if nodes is not None:
+            for node in nodes:
+                nd = node.find(POLYGON_CONFIG_INPUT_PATH_PATTERN)
+                input_path_pattern = parse(nd, POLYGON_CONFIG_DEFAULT_INPUT_PATH_PATTERN)
+                # parse test
+                node = node.find(POLYGON_CONFIG_TESTS)
+                real_index = 1
+                for test in node.findall(POLYGON_CONFIG_TEST):
+                    testObj = {}
+                    method = test.attrib.get(POLYGON_CONFIG_GENERATOR_METHOD)
+                    testObj['is_example'] = bool(test.attrib.get(POLYGON_CONFIG_GENERATOR_IS_EXAMPLE, False))
+                    testObj['description'] = str(test.attrib.get(POLYGON_CONFIG_GENERATOR_DESCRIPTION, ''))
+                    testObj['subtask_group'] = str(test.attrib.get(POLYGON_CONFIG_TEST_GROUP, ''))
+                    testObj['real_index'] = real_index
+                    testObj['input_path_pattern'] = input_path_pattern
+                    if method == POLYGON_CONFIG_GENERATOR_METHOD_MANUAL: # data generated from manually
+                        testObj['genscript'] = POLYGON_CONFIG_PPS_CUSTROM_MANUAL_GENERATOR + ' ' + str(self.generator_custom_manual_count)
+                        self.generator_custom_manuals.append(testObj)
+                        self.generator_custom_manual_count += 1
+                    elif method == POLYGON_CONFIG_GENERATOR_METHOD_GENERATED: # data generated from generator
+                        testObj['genscript'] = test.attrib.get(POLYGON_CONFIG_GENERATOR_GENSCRIPT, '')
+                        used_generator[testObj['genscript'].split(' ')[0]] = True
+                    else: # unknown method
+                        raise PPSPolygonConfigParseError('Unknown Generator Method')
+                    self.tests.append(testObj)
+                    real_index += 1
         else: # no tests
             raise PPSPolygonConfigParseError('No Tests')
         
@@ -224,7 +232,16 @@ class PolygonConfig:
                 groupObj['name'] = str(group.attrib.get('name', ''))
                 groupObj['description'] = ''
                 groupObj['score'] = 0
+                groupObj['dependencies'] = []
+
+                # parse dependencies
+                dependencies = group.find(POLYGON_CONFIG_DEPENDENCIES)
+                if dependencies is not None:
+                    dependency = dependencies.findall(POLYGON_CONFIG_DEPENDENCY)
+                    for dep in dependency:
+                        groupObj['dependencies'].append(str(dep.attrib.get('group', '')))
                 self.groups.append(groupObj)
+                
 
         # parse executables
         node = recursive_find(POLYGON_CONFIG_EXECUTABLES)

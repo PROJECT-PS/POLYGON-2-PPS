@@ -122,9 +122,10 @@ class PPSCore:
 
         # parse manual test case
         for index, manual in enumerate(self.polygon_config.generator_custom_manuals):
-            test_index = manual['test_index'] + POLYGON_CONFIG_TEST_BASE_INDEX
+            pattern = manual['input_path_pattern']
+            real_index = manual['real_index']
             test_data = self.fs.get_file_data(
-                self.source_path / (self.polygon_config.input_path_pattern % test_index)
+                self.source_path / (pattern % real_index)
             )
             tests.append((index, test_data))
             
