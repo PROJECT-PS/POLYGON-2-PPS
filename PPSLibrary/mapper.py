@@ -5,10 +5,14 @@ _solution_type = {
     'cpp.g++17':                    'cpp17',
     'cpp.ms2017':                   'cpp17',
     'cpp.msys2-mingw64-9-g++17':    'cpp17',
+    'cpp.gcc13-64-winlibs-g++20':   'cpp17',
+    'cpp.gcc14-64-msys2-g++23':     'cpp17',
+    'java21':                       'java8',
     'java11':                       'java8',
     'java8':                        'java8',
     'python.3':                     'py3',
-    'python.pypy3':                 'py3',
+    'python.pypy3':                 'pypy3',
+    'python.pypy3-64':              'pypy3',
 }
 
 _solution_tag = {
