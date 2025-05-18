@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 from .constant import *
@@ -131,10 +132,31 @@ class PPSCore:
             
 
         # make pps custom generator
-        if self.fs.is_exists(self.destination_path / PPS_FS_GENERATOR_PATH / '__pps_generator.py'):
-            self.fs.delete_file(self.destination_path / PPS_FS_GENERATOR_PATH / '__pps_generator.py')
-        self.fs.create_file(self.destination_path / PPS_FS_GENERATOR_PATH / '__pps_generator.py')
-        self.fs.set_file_data(
-            self.destination_path / PPS_FS_GENERATOR_PATH / '__pps_generator.py',
-            make_manual_generator(tests),
-        )
+        conf = self.fs.get_file_data(self.destination_path / PPS_FS_CONFIG_NAME)
+        conf = json.loads(conf)
+        generators, indexes = make_manual_generator(tests)
+        for index, generator in enumerate(generators):
+            idx = indexes[index]
+
+            if self.fs.is_exists(self.destination_path / PPS_FS_GENERATOR_PATH / f'__pps_generator_{index}.py'):
+                self.fs.delete_file(self.destination_path / PPS_FS_GENERATOR_PATH / f'__pps_generator_{index}.py')
+            self.fs.create_file(self.destination_path / PPS_FS_GENERATOR_PATH / f'__pps_generator_{index}.py')
+            self.fs.set_file_data(
+                self.destination_path / PPS_FS_GENERATOR_PATH / f'__pps_generator_{index}.py',
+                generator
+            )
+            # add custom generator to config file
+            conf['generators'].append(
+                {
+                    'name': f'__pps_generator_{index}.py',
+                    'language': 'py3',
+                    'alias': f'__pps_generator_{index}',
+                }
+            )
+            for genscript in conf['genscript']:
+                script = genscript['script']
+                spt = script.split(' ')
+                if len(spt) == 2 and spt[0] == '__pps_generator' and int(spt[1]) in idx:
+                    genscript['script'] = f'__pps_generator_{index} {spt[1]}'
+        # save config file
+        self.fs.set_file_data(self.destination_path / PPS_FS_CONFIG_NAME, json.dumps(conf, indent = 4))

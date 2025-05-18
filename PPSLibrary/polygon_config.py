@@ -74,12 +74,6 @@ class PolygonConfig:
                     'language': generator['type'],
                     'alias': FileSystem.remove_extension(generator['name']),
                 } for generator in self.generators
-            ] + [
-                {
-                    'name': '__pps_generator.py',
-                    'language': 'py3',
-                    'alias': '__pps_generator',
-                },
             ],
             'subtask_group': [
                 {

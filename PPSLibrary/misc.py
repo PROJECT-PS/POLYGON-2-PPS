@@ -18,10 +18,29 @@ def make_manual_generator(
     '''
     make manual data generator
     '''
+    prefix = '# -*- coding: utf-8 -*-\nimport sys\nt = int(sys.argv[1])\n'
+    generators = []
+    indexes = []
+    idx = []
     generator = '# -*- coding: utf-8 -*-\nimport sys\nt = int(sys.argv[1])\n'
+    glen = len(generator)
     for index, test in tests:
-        generator += f'if t == {index}:\n print({repr(test)}, end="")\n'
-    return generator
+        gtxt = f'if t == {index}:\n print({repr(test)}, end="")\n'
+        if glen + len(gtxt) > 49 * 1024 * 1024:
+            generators.append(generator)
+            indexes.append(idx)
+            idx = [index]
+            generator = prefix + gtxt
+            glen = len(generator)
+        else:
+            generator += gtxt
+            idx.append(index)
+            glen += len(gtxt)
+    if len(idx) > 0:
+        generators.append(generator)
+        indexes.append(idx)
+    
+    return generators, indexes
 
 def polygon_tex_to_pps_markdown(
     tex_string : str,
