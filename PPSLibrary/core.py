@@ -25,8 +25,8 @@ class PPSCore:
         pipeline for makeing pps package from polygon package
         '''
         self.prepare() # preparing for making pps package
-        self.generate_pps_config() # making config file
-        self.copy_files() # copying files
+        use_interactor = self.generate_pps_config() # making config file
+        self.copy_files(use_interactor) # copying files
         self.make_pps_custom_generator() # making pps custom generator if needed
 
     def prepare(self):
@@ -43,6 +43,7 @@ class PPSCore:
         self.fs.create_directory(self.destination_path / PPS_FS_GENERATOR_PATH)
         self.fs.create_directory(self.destination_path / PPS_FS_SOLUTION_PATH)
         self.fs.create_directory(self.destination_path / PPS_FS_VALIDATOR_PATH)
+        self.fs.create_directory(self.destination_path / PPS_FS_INTERACTOR_PATH)
 
         # parse polygon package config file
         self.polygon_config.parse_config_file(self.source_path / POLYGON_CONFIG_FILE_NAME)
@@ -53,13 +54,15 @@ class PPSCore:
         '''
         print('Generate pps package config file...\n')
         # generate pps package config file
-        config = self.polygon_config.generate_pps_json_config()
+        config, use_interactor = self.polygon_config.generate_pps_json_config()
         if self.fs.is_exists(self.destination_path / PPS_FS_CONFIG_NAME):
             self.fs.delete_file(self.destination_path / PPS_FS_CONFIG_NAME)
         self.fs.create_file(self.destination_path / PPS_FS_CONFIG_NAME)
         self.fs.set_file_data(self.destination_path / PPS_FS_CONFIG_NAME, config)
 
-    def copy_files(self):
+        return use_interactor
+
+    def copy_files(self, use_interactor : bool):
         '''
         copy files from polygon package to pps package
         '''
@@ -84,6 +87,15 @@ class PPSCore:
         if self.fs.is_exists(dest):
             self.fs.delete_file(dest)
         self.fs.copy_file(src, dest)
+
+        # copy interactor files if needed
+        if use_interactor:
+            src = self.source_path / self.polygon_config.interactor['path']
+            dest = self.destination_path / PPS_FS_INTERACTOR_PATH / self.polygon_config.interactor['name']
+            print(f'Copy interactor file from {src} to {dest}')
+            if self.fs.is_exists(dest):
+                self.fs.delete_file(dest)
+            self.fs.copy_file(src, dest)
 
         # copy generators
         for generator in self.polygon_config.generators:
@@ -159,4 +171,4 @@ class PPSCore:
                 if len(spt) == 2 and spt[0] == '__pps_generator' and int(spt[1]) in idx:
                     genscript['script'] = f'__pps_generator_{index} {spt[1]}'
         # save config file
-        self.fs.set_file_data(self.destination_path / PPS_FS_CONFIG_NAME, json.dumps(conf, indent = 4))
+        self.fs.set_file_data(self.destination_path / PPS_FS_CONFIG_NAME, json.dumps(conf, ensure_ascii=False, indent=4))

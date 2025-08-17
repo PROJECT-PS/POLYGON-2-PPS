@@ -77,7 +77,7 @@ class FileSystem:
         file_path = Path(file_path).resolve()
         if not file_path.exists() or not file_path.is_file():
             raise PPSFileNotFoundError
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding='utf-8') as f:
             return f.read()
         # raw = file_path.read_bytes()
         # return raw.decode('utf-8')
@@ -94,7 +94,7 @@ class FileSystem:
         file_path = Path(file_path).resolve()
         if not file_path.exists() or not file_path.is_file():
             raise PPSFileNotFoundError
-        with open(file_path, 'w') as f:
+        with open(file_path, 'w', encoding='utf-8') as f:
             return f.write(data)
     
     @thread_safe

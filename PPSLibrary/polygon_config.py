@@ -22,6 +22,8 @@ from .filesystem import (
 class PolygonConfig:
     def __init__(self):
         self.problem_title = ''
+        self.problem_type = POLYGON_CONFIG_PROBLEM_TYPE_STDIO
+        self.use_interactor = False
         self.time_limit = POLYGON_CONFIG_DEFAULT_TIME_LIMIT
         self.memory_limit = POLYGON_CONFIG_DEFAULT_MEMORY_LIMIT
         self.test_count = POLYGON_CONFIG_DEFAULT_TEST_COUNT
@@ -34,6 +36,7 @@ class PolygonConfig:
         self.executables = []
         self.checker = {}
         self.validators = []
+        self.interactor = {}
         self.solutions = []
         self.generators = []
     
@@ -43,11 +46,13 @@ class PolygonConfig:
         '''
         config = {
             'problem_title': self.problem_title,
-            'problem_type': 'stdio',
+            'problem_type': self.problem_type,
             'checker': self.checker['name'],
             'checker_language': self.checker['type'],
             'validator': self.validators[0]['name'] if len(self.validators) > 0 else '',
             'validator_language': self.validators[0]['type'] if len(self.validators) > 0 else '',
+            'interactor': self.interactor['name'],
+            'interactor_language': self.interactor['type'],
             'subtask': True if len(self.groups) > 0 else False,
             'limits': {
                 'time': self.time_limit,
@@ -97,7 +102,7 @@ class PolygonConfig:
                 'repository': 1,
             },
         }
-        return json.dumps(config, ensure_ascii=False, indent=4)
+        return json.dumps(config, ensure_ascii=False, indent=4), self.use_interactor
 
     def parse_config_file(
         self,
@@ -148,6 +153,15 @@ class PolygonConfig:
         if node is not None:
             attrib = node.attrib
             self.problem_title = attrib.get('value', '')
+
+        # parse problem type
+        node = recursive_find(POLYGON_CONFIG_INTERACTOR)
+        if node is None: self.problem_type = POLYGON_CONFIG_PROBLEM_TYPE_STDIO
+        else:
+            node = recursive_find(POLYGON_CONFIG_TWO_STEP)
+            if node is None: self.problem_type = POLYGON_CONFIG_PROBLEM_TYPE_INTERACTIVE
+            else: self.problem_type = POLYGON_CONFIG_PROBLEM_TYPE_TWO_STEP
+            self.use_interactor = True
 
         # parse time limit
         node = recursive_find(POLYGON_CONFIG_TIME_LIMIT)
@@ -261,6 +275,22 @@ class PolygonConfig:
             'type': convert_solution_type(attrib.get('type', '')),
         }
 
+        # parse interactor
+        if self.use_interactor:
+            node = recursive_find(POLYGON_CONFIG_INTERACTOR)
+            attrib = node.attrib
+            self.interactor = {
+                'path': attrib.get('path', ''),
+                'name': FileSystem.get_filename(attrib.get('path', '')),
+                'type': convert_solution_type(attrib.get('type', '')),
+            }
+        else:
+            self.interactor = {
+                'path': '',
+                'name': '',
+                'type': '',
+            }
+
         # parse validators
         node = recursive_find(POLYGON_CONFIG_VALIDATORS)
         if node is not None:
@@ -286,6 +316,8 @@ class PolygonConfig:
                 solObj['type'] = convert_solution_type(attrib.get('type', ''))
                 self.solutions.append(solObj)
 
+
+        print('[PARSED] problem type:', self.problem_type)
         print('[PARSED] problem title:', self.problem_title)
         print('[PARSED] time limit:', self.time_limit)
         print('[PARSED] memory limit:', self.memory_limit, '- MiB:', self.memory_limit / 1024 / 1024)
@@ -297,6 +329,7 @@ class PolygonConfig:
         print('[PARSED] groups:', compress_str(str(self.groups)))
         print('[PARSED] executables:', compress_str(str(self.executables)))
         print('[PARSED] checker:', compress_str(str(self.checker)))
+        print('[PARSED] interactor:', compress_str(str(self.interactor)))
         print('[PARSED] validators:', compress_str(str(self.validators)))
         print('[PARSED] solutions:', compress_str(str(self.solutions)))
         print('[PARSED] generators:', compress_str(str(self.generators)))

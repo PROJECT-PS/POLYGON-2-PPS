@@ -2,6 +2,13 @@ POLYGON_CONFIG_FILE_NAME = 'problem.xml'
 
 POLYGON_CONFIG_PROBLEM_TITLE = 'names.name'
 
+POLYGON_CONFIG_PROBLEM_TYPE_STDIO = 'stdio'
+POLYGON_CONFIG_PROBLEM_TYPE_INTERACTIVE = 'interactive'
+POLYGON_CONFIG_PROBLEM_TYPE_TWO_STEP = 'two_step'
+
+POLYGON_CONFIG_INTERACTOR = 'assets.interactor.source'
+POLYGON_CONFIG_TWO_STEP = 'assets.interactor.runs.run'
+
 POLYGON_CONFIG_STATEMENTS = 'statements'
 POLYGON_CONFIG_STATEMENT = 'statement'
 POLYGON_CONFIG_STATEMENT_TEX_TYPE = 'application/x-tex'
@@ -59,5 +66,6 @@ PPS_FS_CHECKER_PATH = 'checker'
 PPS_FS_GENERATOR_PATH = 'generator'
 PPS_FS_SOLUTION_PATH = 'solution'
 PPS_FS_VALIDATOR_PATH = 'validator'
+PPS_FS_INTERACTOR_PATH = 'interactor'
 
 PPS_FS_CONFIG_NAME = 'config.json'

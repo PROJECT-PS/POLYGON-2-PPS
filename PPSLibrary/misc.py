@@ -75,6 +75,9 @@ def polygon_tex_to_pps_markdown(
         elif line.startswith('\\end{problem}'):
             result.append('')
             break
+        elif line.startswith('\\Interaction'):
+            result.append('# 인터랙션')
+            result.append('')
         else:
             result.append(line)
 
