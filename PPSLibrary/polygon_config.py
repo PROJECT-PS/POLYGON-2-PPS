@@ -97,6 +97,7 @@ class PolygonConfig:
                     'only_deploy': False,
                 } for test in self.tests
             ],
+            'manual_example': [],
             'versions': {
                 'config': 1,
                 'repository': 1,
