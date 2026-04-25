@@ -146,6 +146,19 @@ class PolygonConfig:
             if node is None:
                 return default_value
             return node.text
+
+        def parse_score(value):
+            '''
+            parse polygon group score. If Polygon does not provide a numeric
+            score for the group, keep PPS' fallback score as 0.
+            '''
+            if value in (None, ''):
+                return 0
+            try:
+                score = float(value)
+            except ValueError:
+                return 0
+            return int(score) if score.is_integer() else score
         
         # parse polygon config file
 
@@ -233,24 +246,47 @@ class PolygonConfig:
             raise PPSPolygonConfigParseError('No Tests')
         
         # parse groups
-        node = recursive_find(POLYGON_CONFIG_GROUPS)
-        if node is not None:
+        parsed_groups = {}
+        for testset in nodes:
+            groups = testset.find('groups')
+            if groups is None:
+                continue
+
             # parse group
-            for group in node.findall(POLYGON_CONFIG_GROUP):
-                groupObj = {}
-                groupObj['name'] = str(group.attrib.get('name', ''))
-                groupObj['description'] = ''
-                groupObj['score'] = 0
-                groupObj['dependencies'] = []
+            for group in groups.findall(POLYGON_CONFIG_GROUP):
+                group_name = str(group.attrib.get('name', ''))
+                if group_name == '':
+                    continue
+
+                groupObj = parsed_groups.get(group_name, {
+                    'name': group_name,
+                    'description': '',
+                    'score': 0,
+                    'dependencies': [],
+                })
+                groupObj['score'] = parse_score(group.attrib.get('points', ''))
 
                 # parse dependencies
                 dependencies = group.find(POLYGON_CONFIG_DEPENDENCIES)
                 if dependencies is not None:
                     dependency = dependencies.findall(POLYGON_CONFIG_DEPENDENCY)
                     for dep in dependency:
-                        groupObj['dependencies'].append(str(dep.attrib.get('group', '')))
-                self.groups.append(groupObj)
-                
+                        dep_name = str(dep.attrib.get('group', ''))
+                        if dep_name != '' and dep_name not in groupObj['dependencies']:
+                            groupObj['dependencies'].append(dep_name)
+                parsed_groups[group_name] = groupObj
+
+        for test in self.tests:
+            group_name = test['subtask_group']
+            if group_name != '' and group_name not in parsed_groups:
+                parsed_groups[group_name] = {
+                    'name': group_name,
+                    'description': '',
+                    'score': 0,
+                    'dependencies': [],
+                }
+
+        self.groups = list(parsed_groups.values())
 
         # parse executables
         node = recursive_find(POLYGON_CONFIG_EXECUTABLES)
