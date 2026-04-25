@@ -23,20 +23,20 @@ Polygon Package를 PPS Package로 만들어주는 파이썬 프로그램입니�
  $ python3 run.py -s <polygon_package_path> -d <pps_package_path>
 ```
 
-`<pps_package_path>`는 새로 생성될 PPS Package의 경로입니다. Polygon2PPS에서 자동으로 폴더를 생성해주기 때문에 폴더를 생성하지 않고 실행해도 무방합니다.
+`<pps_package_path>`는 새로 생성될 PPS Package의 경로입니다. Polygon2PPS에서 자동으로 폴더를 생성해주기 때문에 폴더를 생성하지 않고 실행해도 무방합니다. **단, 기존 폴더 내에 파일이 존재하는 경우, 이름이 같은 파일은 덮어쓰고, 그 외 파일은 그대로 유지됩니다.**
+
+빈 템플릿으로 PPS Package(문제)를 생성한 후, 비어있는 Repository를 Clone 받은 후 해당 폴더를 `<pps_package_path>`로 지정하여 실행하는 것을 강력히 권장드립니다.
 
 ## Difference beteween Polygon and PPS
 
-* PPS에서는 STDIO 타입만 지원합니다.
-* ~~PPS에서는 지문을 Markdown 형식으로 작성해야 하므로, Polygon에서 제공하는 지문은 파일은 옮겨주되 Markdown 형식으로 편집해야 합니다.~~
-  * 현재 latex to markdown 변환을 지원하고 있습니다. 다만, 올바르게 변환됐는지 꼭 확인해야 합니다.
+* 현재 latex to markdown 변환을 지원하고 있습니다. 다만, 완벽하지 않기 때문에, 변환이 올바르게 됐는지 확인해야 합니다.
 * PPS에서는 테스트케이스를 매뉴얼하게 생성하는 방법을 지원하지 않습니다.
-    * **따라서, 메뉴얼한 테스트케이스를 생성하는 제네레이터를 자동으로 생성해줍니다.** 다만, 손으로 만든 데이터 크기 합이 큰 경우 문제가 발생할 수도 있습니다. 이 경우 데이터를 압축하거나, 임의로 제네레이터를 분할하는 등 작업을 거쳐야 합니다. 자세한 이슈는 PPS 이용 가이드를 참고해주세요.
+    * **따라서, 메뉴얼한 테스트케이스를 생성하는 제네레이터를 자동으로 생성해줍니다.** 다만, 사이즈가 커지는 경우, 웹에서 확인이 안 될 수 있습니다.
 * 폴리곤에서 제네레이터 이름에 공백이 들어갈 수 있는지는 모르겠으나, 들어간 경우 문제가 발생합니다.
-* 지문에 포함되는 사진 파일 혹은 헤더 파일 등을 업로드 해놓고 코드에서 불러와서 쓰는 등 외부 파일은 현재는 지원하지 않습니다.
+* 지문에 포함되는 사진 파일은 옮겨지지 않습니다. 별도 사진 업로드 시스템을 활용해야 합니다.
+* 헤더 파일을 추가해놓고 여러 코드에서 사용하는 기능이 PPS에 존재하지 않습니다. 이 경우, 헤더 파일을 사용하는 모든 파일을 직접 수정해야 합니다.
 
 ## TODO
 
 * ~~Statement Auto Compiling Tex to Markdwon~~
 * Statement Auto Compiling Tex to Markdown For General Case (Not Tested Properly)
-* Multiple Testset with Subtask Group Parsing
